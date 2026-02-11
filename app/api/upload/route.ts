@@ -22,11 +22,16 @@ async function processMedia(buffer: Buffer, fileName: string, mimeType: string, 
   }
 
   await prisma.media.create({ data: mediaData }).catch(() => {})
-  await supabase.from('Media').insert([mediaData]).catch(() => {})
+  
+  try {
+    await supabase.from('Media').insert([mediaData])
+  } catch (e) {}
+  
   await turso.execute({
     sql: 'INSERT INTO Media (id, name, url, size, mimeType, provider) VALUES (?, ?, ?, ?, ?, ?)',
     args: [mediaData.id, mediaData.name, mediaData.url, mediaData.size, mediaData.mimeType, mediaData.provider]
   }).catch(() => {})
+  
   await appwriteDb.createDocument(
     process.env.APPWRITE_DATABASE_ID as string,
     'media_collection',
