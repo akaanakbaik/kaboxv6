@@ -8,19 +8,19 @@ cloudinary.config({
 })
 
 export const imagekit = new ImageKit({
-  publicKey: process.env.IMAGEKIT_PUBLIC_KEY || '',
-  privateKey: process.env.IMAGEKIT_PRIVATE_KEY || '',
-  urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT || ''
+  publicKey: process.env.IMAGEKIT_PUBLIC_KEY || "dummy_public_key",
+  privateKey: process.env.IMAGEKIT_PRIVATE_KEY || "dummy_private_key",
+  urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT || "https://ik.imagekit.io/dummy"
 })
 
 export const b2 = new B2({
-  applicationKeyId: process.env.B2_KEY_ID || '',
-  applicationKey: process.env.B2_APPLICATION_KEY || ''
+  applicationKeyId: process.env.B2_KEY_ID || "dummy_key_id",
+  applicationKey: process.env.B2_APPLICATION_KEY || "dummy_app_key"
 })
 
 const appwriteClient = new Client()
-  .setEndpoint(process.env.APPWRITE_ENDPOINT || '')
-  .setProject(process.env.APPWRITE_PROJECT_ID || '')
-  .setKey(process.env.APPWRITE_API_KEY || '')
+  .setEndpoint(process.env.APPWRITE_ENDPOINT || "https://cloud.appwrite.io/v1")
+  .setProject(process.env.APPWRITE_PROJECT_ID || "dummy_project")
+  .setKey(process.env.APPWRITE_API_KEY || "dummy_api_key")
 
 export const appwriteStorage = new Storage(appwriteClient)
