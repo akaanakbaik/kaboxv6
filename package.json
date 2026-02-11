@@ -1,0 +1,42 @@
+{
+  "name": "domku-box",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "start": "next start",
+    "lint": "next lint",
+    "bot": "node bot/index.js"
+  },
+  "dependencies": {
+    "next": "14.2.3",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "express": "4.19.2",
+    "prisma": "5.14.0",
+    "@prisma/client": "5.14.0",
+    "@libsql/client": "0.6.0",
+    "node-appwrite": "12.0.0",
+    "cloudinary": "2.2.0",
+    "b2-cloud-storage": "1.0.0",
+    "imagekit": "5.0.0",
+    "i18next": "23.11.4",
+    "react-i18next": "14.1.1",
+    "i18next-browser-languagedetector": "7.2.1",
+    "lucide-react": "0.379.0",
+    "clsx": "2.1.1",
+    "tailwind-merge": "2.3.0",
+    "framer-motion": "11.2.4",
+    "axios": "1.6.8",
+    "formidable": "3.5.1",
+    "node-telegram-bot-api": "0.65.0",
+    "@radix-ui/react-slot": "1.0.2",
+    "@radix-ui/react-progress": "1.0.3",
+    "@radix-ui/react-toast": "1.1.5",
+    "tailwindcss": "3.4.3",
+    "postcss": "8.4.38",
+    "autoprefixer": "10.4.19",
+    "request-ip": "3.3.0"
+  }
+}
