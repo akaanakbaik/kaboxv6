@@ -60,5 +60,27 @@ export async function POST(req: NextRequest) {
       const formData = await req.formData()
       const files = formData.getAll('media') as File[]
       
-      if (!files || files.length === 0) return NextResponse.json({ ...authorMeta, success: false, error: 'No files provided' }, { status: 400 })
-      if (files.length > 5) return NextResponse.json({ ...authorMeta, success:
+      if (!files || files.length === 0) {
+        return NextResponse.json({ ...authorMeta, success: false, error: 'No files provided' }, { status: 400 })
+      }
+      
+      if (files.length > 5) {
+        return NextResponse.json({ ...authorMeta, success: false, error: 'Maximum 5 files allowed' }, { status: 400 })
+      }
+
+      for (const file of files) {
+        const buffer = Buffer.from(await file.arrayBuffer())
+        const url = await processMedia(buffer, file.name, file.type, file.size, baseUrl)
+        resultUrls.push(url)
+      }
+    }
+
+    return NextResponse.json({ ...authorMeta, success: true, message: 'Upload distributed successfully', urls: resultUrls })
+  } catch (error) {
+    return NextResponse.json({ ...authorMeta, success: false, error: 'Internal Server Error' }, { status: 500 })
+  }
+}
+
+export async function GET(req: NextRequest) {
+  return POST(req)
+}
