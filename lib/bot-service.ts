@@ -2,24 +2,45 @@ import { prisma, turso, supabase, appwriteDb } from '@/lib/db'
 import { distributeToStorage } from '@/lib/upload-service'
 import { v4 as uuidv4 } from 'uuid'
 import { ID } from 'node-appwrite'
+import os from 'os'
+
+export async function getSystemStats() {
+  const freeMem = Math.round(os.freemem() / 1024 / 1024)
+  const totalMem = Math.round(os.totalmem() / 1024 / 1024)
+  const uptime = Math.round(os.uptime() / 60)
+  const cpuModel = os.cpus()[0].model
+  const platform = `${os.platform()} ${os.release()}`
+
+  return `🖥 *SERVER STATS*\n\n` +
+         `💾 *RAM:* ${freeMem}MB / ${totalMem}MB\n` +
+         `⚙️ *CPU:* ${cpuModel}\n` +
+         `📀 *OS:* ${platform}\n` +
+         `⏱ *Uptime:* ${uptime} Menit`
+}
 
 export async function getDatabaseStats() {
   let prismaCount = 0
   let supabaseCount = 0
   let tursoCount = 0
   let appwriteCount = 0
+  let status = []
 
-  try { prismaCount = await prisma.media.count() } catch (e) {}
+  try { 
+    prismaCount = await prisma.media.count() 
+    status.push("✅ Prisma")
+  } catch (e) { status.push("❌ Prisma") }
 
   try { 
     const { count } = await supabase.from('Media').select('*', { count: 'exact', head: true })
     supabaseCount = count || 0
-  } catch (e) {}
+    status.push("✅ Supabase")
+  } catch (e) { status.push("❌ Supabase") }
 
   try {
     const rs = await turso.execute('SELECT COUNT(*) as count FROM Media')
     tursoCount = Number(rs.rows[0]?.count) || 0
-  } catch (e) {}
+    status.push("✅ Turso")
+  } catch (e) { status.push("❌ Turso") }
 
   try {
     const appwriteRes = await appwriteDb.listDocuments(
@@ -27,14 +48,18 @@ export async function getDatabaseStats() {
       'media_collection'
     )
     appwriteCount = appwriteRes.total
-  } catch (e) {}
+    status.push("✅ Appwrite")
+  } catch (e) { status.push("❌ Appwrite") }
 
-  return `📊 *REAL-TIME DATABASE STATS*\n\n` +
-         `🔹 *Prisma/Neon:* ${prismaCount} files\n` +
-         `🔹 *Supabase:* ${supabaseCount} files\n` +
-         `🔹 *Turso:* ${tursoCount} files\n` +
-         `🔹 *Appwrite:* ${appwriteCount} files\n\n` +
-         `✅ *System Status:* Online & Syncing`
+  const totalFiles = prismaCount
+
+  return `📊 *DATABASE STATUS*\n\n` +
+         `Startus Koneksi: ${status.join(' | ')}\n\n` +
+         `🔹 *Prisma/Neon:* ${prismaCount}\n` +
+         `🔹 *Supabase:* ${supabaseCount}\n` +
+         `🔹 *Turso:* ${tursoCount}\n` +
+         `🔹 *Appwrite:* ${appwriteCount}\n\n` +
+         `📂 *Total Synced Files:* ${totalFiles}`
 }
 
 export async function processTelegramMedia(fileId: string, botToken: string, domain: string) {
