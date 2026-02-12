@@ -1,5 +1,5 @@
 "use client"
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { UploadCloud, File as FileIcon, X, CheckCircle, Copy, ExternalLink, Loader2 } from 'lucide-react'
 
@@ -9,6 +9,7 @@ export default function HomeUploader() {
   const [uploading, setUploading] = useState(false)
   const [progress, setProgress] = useState(0)
   const [results, setResults] = useState<string[]>([])
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -44,28 +45,36 @@ export default function HomeUploader() {
     if (files.length === 0) return
     setUploading(true)
     setProgress(0)
-    
+
     const formData = new FormData()
     files.forEach((file) => formData.append('media', file))
 
     try {
       const interval = setInterval(() => {
-        setProgress((p) => (p < 90 ? p + 10 : p))
-      }, 500)
+        setProgress((prev) => {
+          if (prev >= 98) return 98
+          return prev + 1
+        })
+      }, 50)
 
       const response = await fetch('/api/upload', {
         method: 'POST',
         body: formData
       })
 
-      clearInterval(interval)
-      setProgress(100)
-      
       const data = await response.json()
+      
+      clearInterval(interval)
+
       if (data.success && data.urls) {
+        setProgress(100)
         setResults(data.urls)
+      } else {
+        setProgress(0)
+        alert('Upload failed')
       }
     } catch (error) {
+      clearInterval(undefined)
       setProgress(0)
     } finally {
       setTimeout(() => setUploading(false), 1000)
@@ -80,40 +89,48 @@ export default function HomeUploader() {
     <motion.div 
       initial={{ opacity: 0, y: 20 }} 
       animate={{ opacity: 1, y: 0 }} 
-      className="w-full max-w-3xl flex flex-col items-center gap-8 mt-10"
+      className="w-full max-w-2xl flex flex-col items-center gap-6 mt-10"
     >
       <div 
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        className={`w-full relative border-2 border-dashed rounded-3xl p-12 flex flex-col items-center justify-center transition-all duration-300 ${isDragging ? 'border-blue-500 bg-blue-500/10 scale-105' : 'border-white/20 bg-white/5 hover:bg-white/10 hover:border-white/40'}`}
+        onClick={() => fileInputRef.current?.click()}
+        className={`w-full relative border-2 border-dashed rounded-3xl p-10 flex flex-col items-center justify-center transition-all duration-300 cursor-pointer ${isDragging ? 'border-blue-500 bg-blue-500/10 scale-[1.02]' : 'border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/30'}`}
       >
         <input 
+          ref={fileInputRef}
           type="file" 
           multiple 
           onChange={handleFileInput} 
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
+          className="hidden" 
         />
-        <UploadCloud size={64} className={`mb-4 transition-colors ${isDragging ? 'text-blue-400' : 'text-gray-400'}`} />
-        <h2 className="text-xl font-bold mb-2 text-center text-white">Tarik & Lepas Media di Sini</h2>
-        <p className="text-gray-400 text-sm mb-4 text-center">Atau klik untuk memilih file (Maks 5 File)</p>
+        <div className={`p-4 rounded-full mb-4 ${isDragging ? 'bg-blue-500/20 text-blue-400' : 'bg-white/10 text-gray-400'}`}>
+          <UploadCloud size={32} />
+        </div>
+        <h2 className="text-lg font-bold mb-1 text-center text-white">Upload File</h2>
+        <p className="text-gray-400 text-xs text-center">Drag & Drop atau Klik (Max 5 File)</p>
       </div>
+
+      <p className="text-[10px] text-gray-500 text-center max-w-md px-4 leading-relaxed">
+        web cdn ini gratis, tanpa iklan dan silahkan gunakan dgn baik dgn ketentuan yg berlaku
+      </p>
 
       <AnimatePresence>
         {files.length > 0 && !uploading && results.length === 0 && (
-          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="w-full flex flex-col gap-3">
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="w-full flex flex-col gap-2">
             {files.map((file, i) => (
-              <div key={i} className="flex items-center justify-between bg-white/5 border border-white/10 p-4 rounded-xl">
+              <div key={i} className="flex items-center justify-between bg-white/5 border border-white/10 p-3 rounded-lg">
                 <div className="flex items-center gap-3 overflow-hidden">
-                  <FileIcon className="text-blue-400 flex-shrink-0" />
-                  <span className="truncate text-sm text-gray-200">{file.name}</span>
+                  <FileIcon size={16} className="text-blue-400 flex-shrink-0" />
+                  <span className="truncate text-xs text-gray-300">{file.name}</span>
                 </div>
-                <button onClick={() => removeFile(i)} className="text-gray-400 hover:text-red-400 transition-colors">
-                  <X size={20} />
+                <button onClick={(e) => { e.stopPropagation(); removeFile(i); }} className="text-gray-500 hover:text-red-400">
+                  <X size={16} />
                 </button>
               </div>
             ))}
-            <button onClick={startUpload} className="mt-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-blue-500/25 transition-all transform hover:scale-105 active:scale-95 self-center">
+            <button onClick={startUpload} className="mt-2 w-full bg-white text-black font-bold py-2.5 rounded-lg hover:bg-gray-200 transition-colors text-sm">
               Mulai Upload
             </button>
           </motion.div>
@@ -122,38 +139,38 @@ export default function HomeUploader() {
 
       <AnimatePresence>
         {uploading && (
-          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="w-full flex flex-col items-center gap-4 bg-white/5 border border-white/10 p-8 rounded-3xl">
-            <Loader2 size={48} className="text-blue-500 animate-spin" />
-            <div className="w-full bg-black/50 rounded-full h-3 overflow-hidden border border-white/10">
-              <motion.div className="bg-gradient-to-r from-blue-500 to-purple-500 h-full" initial={{ width: 0 }} animate={{ width: `${progress}%` }} transition={{ ease: 'linear' }} />
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full space-y-2">
+            <div className="flex justify-between text-xs text-gray-400 px-1">
+              <span className="flex items-center gap-1"><Loader2 size={10} className="animate-spin" /> Uploading...</span>
+              <span>{progress}%</span>
             </div>
-            <p className="text-white font-bold text-lg">{progress}% Mengunggah...</p>
+            <div className="w-full bg-white/10 rounded-full h-1.5 overflow-hidden">
+              <motion.div className="bg-blue-500 h-full rounded-full" initial={{ width: 0 }} animate={{ width: `${progress}%` }} transition={{ ease: 'linear', duration: 0.1 }} />
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
       <AnimatePresence>
         {results.length > 0 && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full grid gap-4">
-            <div className="flex items-center justify-center gap-2 mb-4 text-green-400">
-              <CheckCircle size={28} />
-              <h3 className="text-xl font-bold">Berhasil Diunggah!</h3>
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="w-full grid gap-3">
+            <div className="flex items-center justify-center gap-2 mb-2 text-green-400">
+              <CheckCircle size={20} />
+              <h3 className="text-sm font-bold">Sukses!</h3>
             </div>
             {results.map((url, i) => (
-              <div key={i} className="flex flex-col sm:flex-row items-center justify-between bg-white/5 border border-white/10 p-4 rounded-2xl gap-4">
-                <input readOnly value={url} className="w-full bg-black/50 border border-white/10 rounded-lg py-2 px-3 text-sm text-gray-300 focus:outline-none" />
-                <div className="flex gap-2 w-full sm:w-auto">
-                  <button onClick={() => copyToClipboard(url)} className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white py-2 px-4 rounded-lg transition-colors text-sm font-medium">
-                    <Copy size={16} /> Salin
-                  </button>
-                  <a href={url} target="_blank" rel="noopener noreferrer" className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 py-2 px-4 rounded-lg transition-colors text-sm font-medium">
-                    <ExternalLink size={16} /> Buka
-                  </a>
-                </div>
+              <div key={i} className="flex items-center gap-2 bg-black/40 border border-white/10 p-2 rounded-lg">
+                <input readOnly value={url} className="flex-1 bg-transparent text-[10px] sm:text-xs text-gray-300 focus:outline-none font-mono px-2" />
+                <button onClick={() => copyToClipboard(url)} className="p-1.5 hover:bg-white/10 rounded text-gray-400 hover:text-white">
+                  <Copy size={14} />
+                </button>
+                <a href={url} target="_blank" rel="noopener noreferrer" className="p-1.5 hover:bg-white/10 rounded text-blue-400 hover:text-blue-300">
+                  <ExternalLink size={14} />
+                </a>
               </div>
             ))}
-            <button onClick={() => { setResults([]); setFiles([]); setProgress(0) }} className="mt-4 text-gray-400 hover:text-white transition-colors text-sm underline underline-offset-4 self-center">
-              Unggah File Lainnya
+            <button onClick={() => { setResults([]); setFiles([]); setProgress(0) }} className="mt-2 text-xs text-gray-500 hover:text-white transition-colors">
+              Upload Lagi
             </button>
           </motion.div>
         )}
