@@ -4,18 +4,18 @@ import { v4 as uuidv4 } from 'uuid'
 import { ID } from 'node-appwrite'
 import os from 'os'
 
-export async function getSystemStats() {
+export function getSystemStats() {
   const freeMem = Math.round(os.freemem() / 1024 / 1024)
   const totalMem = Math.round(os.totalmem() / 1024 / 1024)
   const uptime = Math.round(os.uptime() / 60)
-  const cpuModel = os.cpus()[0].model
+  const cpuModel = os.cpus()[0]?.model || 'Unknown CPU'
   const platform = `${os.platform()} ${os.release()}`
 
-  return `🖥 *SERVER STATS*\n\n` +
-         `💾 *RAM:* ${freeMem}MB / ${totalMem}MB\n` +
-         `⚙️ *CPU:* ${cpuModel}\n` +
-         `📀 *OS:* ${platform}\n` +
-         `⏱ *Uptime:* ${uptime} Menit`
+  return `🖥 *SERVER INFO*\n` +
+         `💾 RAM: ${freeMem}MB / ${totalMem}MB\n` +
+         `⚙️ CPU: ${cpuModel}\n` +
+         `📀 OS: ${platform}\n` +
+         `⏱ Uptime: ${uptime} Menit`
 }
 
 export async function getDatabaseStats() {
@@ -26,7 +26,7 @@ export async function getDatabaseStats() {
   let status = []
 
   try { 
-    prismaCount = await prisma.media.count() 
+    prismaCount = await prisma.media.count()
     status.push("✅ Prisma")
   } catch (e) { status.push("❌ Prisma") }
 
@@ -51,22 +51,19 @@ export async function getDatabaseStats() {
     status.push("✅ Appwrite")
   } catch (e) { status.push("❌ Appwrite") }
 
-  const totalFiles = prismaCount
-
-  return `📊 *DATABASE STATUS*\n\n` +
-         `Startus Koneksi: ${status.join(' | ')}\n\n` +
-         `🔹 *Prisma/Neon:* ${prismaCount}\n` +
-         `🔹 *Supabase:* ${supabaseCount}\n` +
-         `🔹 *Turso:* ${tursoCount}\n` +
-         `🔹 *Appwrite:* ${appwriteCount}\n\n` +
-         `📂 *Total Synced Files:* ${totalFiles}`
+  return `📊 *DATABASE REAL-TIME*\n\n` +
+         `Status: ${status.join(' | ')}\n` +
+         `🔹 Prisma: ${prismaCount} Files\n` +
+         `🔹 Supabase: ${supabaseCount} Files\n` +
+         `🔹 Turso: ${tursoCount} Files\n` +
+         `🔹 Appwrite: ${appwriteCount} Files`
 }
 
 export async function processTelegramMedia(fileId: string, botToken: string, domain: string) {
   try {
     const fileRes = await fetch(`https://api.telegram.org/bot${botToken}/getFile?file_id=${fileId}`)
     const fileData = await fileRes.json()
-    if (!fileData.ok) throw new Error('Failed to get file path from Telegram')
+    if (!fileData.ok) throw new Error('Failed to get file path')
 
     const filePath = fileData.result.file_path
     const downloadUrl = `https://api.telegram.org/file/bot${botToken}/${filePath}`
@@ -91,22 +88,19 @@ export async function processTelegramMedia(fileId: string, botToken: string, dom
       provider: storageResult.provider
     }
 
-    await prisma.media.create({ data: mediaData }).catch(() => {})
-    await supabase.from('Media').insert([mediaData]).catch(() => {})
-    await turso.execute({
-      sql: 'INSERT INTO Media (id, name, url, size, mimeType, provider) VALUES (?, ?, ?, ?, ?, ?)',
-      args: [mediaData.id, mediaData.name, mediaData.url, mediaData.size, mediaData.mimeType, mediaData.provider]
-    }).catch(() => {})
-    await appwriteDb.createDocument(
-      process.env.APPWRITE_DATABASE_ID as string,
-      'media_collection',
-      ID.unique(),
-      mediaData
-    ).catch(() => {})
+    await Promise.allSettled([
+      prisma.media.create({ data: mediaData }),
+      supabase.from('Media').insert([mediaData]),
+      turso.execute({
+        sql: 'INSERT INTO Media (id, name, url, size, mimeType, provider) VALUES (?, ?, ?, ?, ?, ?)',
+        args: [mediaData.id, mediaData.name, mediaData.url, mediaData.size, mediaData.mimeType, mediaData.provider]
+      }),
+      appwriteDb.createDocument(process.env.APPWRITE_DATABASE_ID!, 'media_collection', ID.unique(), mediaData)
+    ])
 
     return finalUrl
   } catch (error) {
-    console.error('Telegram Upload Error:', error)
+    console.error(error)
     return null
   }
 }
