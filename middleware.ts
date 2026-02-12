@@ -1,45 +1,47 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-const rateLimitMap = new Map()
+const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
+const CHANNEL_ID = process.env.TELEGRAM_CHANNEL_ID
 
-export function middleware(request: NextRequest) {
-  const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown'
-  const now = Date.now()
-  const windowMs = 1000
-  const maxRequests = 10
+async function sendLog(text: string) {
+  if (!BOT_TOKEN || !CHANNEL_ID) return
+  try {
+    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: CHANNEL_ID,
+        text: text,
+        parse_mode: 'HTML',
+        disable_web_page_preview: true,
+        disable_notification: true 
+      })
+    })
+  } catch (e) {}
+}
 
-  if (!rateLimitMap.has(ip)) {
-    rateLimitMap.set(ip, { count: 1, startTime: now })
-  } else {
-    const rateData = rateLimitMap.get(ip)
-    if (now - rateData.startTime < windowMs) {
-      rateData.count++
-      if (rateData.count > maxRequests) {
-        return new NextResponse(JSON.stringify({ error: 'Too Many Requests', blocked: true }), {
-          status: 429,
-          headers: { 'Content-Type': 'application/json' }
-        })
-      }
-    } else {
-      rateLimitMap.set(ip, { count: 1, startTime: now })
-    }
+export function middleware(req: NextRequest) {
+  const ip = req.headers.get('x-forwarded-for') || 'Unknown IP'
+  const path = req.nextUrl.pathname
+  const method = req.method
+  const ua = req.headers.get('user-agent') || 'Unknown UA'
+  const country = req.geo?.country || 'Unknown'
+
+  // Filter: Jangan log file statis agar tidak spam
+  if (!path.match(/\.(ico|png|jpg|jpeg|svg|css|js|map|json)$/) && !path.startsWith('/_next') && !path.startsWith('/api/telegram')) {
+    const text = `<b>🔔 TRAFFIC INCOMING</b>\n\n` +
+                 `🛣 <b>Path:</b> <code>${method} ${path}</code>\n` +
+                 `🌍 <b>IP:</b> <code>${ip}</code> (${country})\n` +
+                 `📱 <b>Device:</b> <code>${ua}</code>`
+    
+    // Fire and forget log
+    sendLog(text).catch(console.error)
   }
-
-  const { pathname } = request.nextUrl
-
-  if (pathname === '/') {
-    const country = request.geo?.country || 'US'
-    if (country === 'ID') {
-      return NextResponse.redirect(new URL('/id/~', request.url))
-    } else {
-      return NextResponse.redirect(new URL('/en/~', request.url))
-    }
-  }
-
+  
   return NextResponse.next()
 }
 
 export const config = {
-  matcher: ['/', '/api/:path*']
+  matcher: '/:path*',
 }
