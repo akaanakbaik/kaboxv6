@@ -23,12 +23,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang={locale} className="dark">
-      <body className={`${inter.className} bg-[#0a0a0a] text-white antialiased min-h-screen pb-20 selection:bg-blue-500/30`}>
-        <Header locale={locale} />
-        <main className="pt-28 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto w-full flex flex-col items-center">
-          {children}
-        </main>
-        <Footer />
+      <body className={`${inter.className} bg-[#0a0a0a] text-white antialiased`}>
+        <div className="flex flex-col min-h-screen">
+          <Header locale={locale} />
+          <main className="flex-grow pt-24 px-4 sm:px-6 lg:px-8 w-full max-w-6xl mx-auto flex flex-col items-center pb-12">
+            {children}
+          </main>
+          <Footer />
+        </div>
       </body>
     </html>
   )
