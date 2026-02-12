@@ -1,88 +1,72 @@
 "use client"
 import { motion } from 'framer-motion'
-import { Code, Terminal, Server, ShieldCheck } from 'lucide-react'
+import { Server, Activity } from 'lucide-react'
 
 export default function ApiDocs() {
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 20 }} 
+      initial={{ opacity: 0, y: 10 }} 
       animate={{ opacity: 1, y: 0 }} 
-      className="w-full max-w-4xl flex flex-col gap-10 mt-10"
+      className="w-full max-w-3xl flex flex-col gap-6 mt-6 px-2"
     >
-      <div className="text-center space-y-4">
-        <h1 className="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
-          API Documentation
-        </h1>
-        <p className="text-gray-400 text-lg">Integrasikan sistem multi-CDN Domku Box ke aplikasimu.</p>
+      <div className="border-b border-white/10 pb-4">
+        <h1 className="text-2xl font-bold text-white">API Documentation</h1>
+        <p className="text-gray-400 text-xs mt-2">Integrasi sistem multi-CDN Domku Box.</p>
       </div>
 
-      <div className="grid gap-6">
-        <div className="bg-[#111] border border-white/10 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden group hover:border-blue-500/50 transition-colors">
-          <div className="absolute top-0 left-0 w-1 h-full bg-blue-500" />
-          <div className="flex items-center gap-4 mb-6">
-            <div className="p-3 bg-blue-500/10 rounded-xl">
-              <Server className="text-blue-400" size={28} />
+      <div className="grid gap-4">
+        <div className="bg-[#111] border border-white/10 rounded-xl p-5 hover:border-blue-500/30 transition-colors">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-blue-500/10 rounded-lg">
+              <Server className="text-blue-400" size={18} />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-white">Upload Media</h2>
-              <p className="text-gray-400 text-sm">POST /api/upload</p>
+              <div className="flex items-center gap-2">
+                <span className="bg-blue-900/30 text-blue-400 text-[10px] font-bold px-1.5 py-0.5 rounded border border-blue-900/50">POST</span>
+                <span className="text-sm font-mono text-gray-200">/api/upload</span>
+              </div>
+              <p className="text-gray-500 text-[10px] mt-0.5">Upload media (Max 5 files)</p>
             </div>
           </div>
-          <p className="text-gray-300 mb-6 leading-relaxed">
-            Endpoint ini digunakan untuk mengunggah hingga 5 file media secara bersamaan. Data akan didistribusikan ke Prisma, Neon, Turso, Supabase, dan Appwrite secara otomatis.
-          </p>
-          <div className="bg-black/80 rounded-xl p-4 font-mono text-sm border border-white/5 overflow-x-auto mb-6">
-            <div className="flex items-center gap-2 mb-2 text-gray-400"><Terminal size={14} /> cURL Example</div>
-            <code className="text-green-400">curl -X POST https://domku.xyz/api/upload \</code><br/>
-            <code className="text-green-400">  -F "media=@file1.jpg" \</code><br/>
-            <code className="text-green-400">  -F "media=@file2.png"</code>
-          </div>
-          <div className="bg-black/80 rounded-xl p-4 font-mono text-sm border border-white/5 overflow-x-auto">
-            <div className="flex items-center gap-2 mb-2 text-gray-400"><Code size={14} /> JSON Response</div>
-            <pre className="text-blue-300">
+          
+          <div className="space-y-3">
+            <div>
+              <p className="text-[10px] uppercase text-gray-500 font-bold mb-1.5">cURL Example</p>
+              <div className="bg-black rounded-lg p-3 font-mono text-[10px] border border-white/5 overflow-x-auto text-gray-300 whitespace-pre">
+{`curl -X POST https://domku.xyz/api/upload \\
+  -F "media=@photo.jpg"`}
+              </div>
+            </div>
+            <div>
+              <p className="text-[10px] uppercase text-gray-500 font-bold mb-1.5">Response</p>
+              <div className="bg-black rounded-lg p-3 font-mono text-[10px] border border-white/5 overflow-x-auto text-green-400 whitespace-pre">
 {`{
-  "author": "aka",
-  "email": "akaanakbaik17@proton.me",
   "success": true,
-  "message": "Upload completed across multiple databases",
-  "urls": [
-    "https://domku.xyz/files/abc12345.jpg",
-    "https://domku.xyz/files/xyz98765.png"
-  ]
+  "urls": ["https://domku.xyz/files/abc.jpg"]
 }`}
-            </pre>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="bg-[#111] border border-white/10 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden group hover:border-purple-500/50 transition-colors">
-          <div className="absolute top-0 left-0 w-1 h-full bg-purple-500" />
-          <div className="flex items-center gap-4 mb-6">
-            <div className="p-3 bg-purple-500/10 rounded-xl">
-              <ShieldCheck className="text-purple-400" size={28} />
+        <div className="bg-[#111] border border-white/10 rounded-xl p-5 hover:border-purple-500/30 transition-colors">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-purple-500/10 rounded-lg">
+              <Activity className="text-purple-400" size={18} />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-white">Check Upload Status</h2>
-              <p className="text-gray-400 text-sm">GET /files/:id/status</p>
+              <div className="flex items-center gap-2">
+                <span className="bg-green-900/30 text-green-400 text-[10px] font-bold px-1.5 py-0.5 rounded border border-green-900/50">GET</span>
+                <span className="text-sm font-mono text-gray-200">/api/health</span>
+              </div>
+              <p className="text-gray-500 text-[10px] mt-0.5">Cek status sistem & database</p>
             </div>
           </div>
-          <p className="text-gray-300 mb-6 leading-relaxed">
-            Gunakan endpoint ini untuk memeriksa progres unggahan di latar belakang secara *real-time*.
-          </p>
-          <div className="bg-black/80 rounded-xl p-4 font-mono text-sm border border-white/5 overflow-x-auto">
-            <pre className="text-purple-300">
+          <div className="bg-black rounded-lg p-3 font-mono text-[10px] border border-white/5 overflow-x-auto text-purple-300 whitespace-pre">
 {`{
-  "author": "aka",
-  "email": "akaanakbaik17@proton.me",
-  "success": true,
-  "data": {
-    "id": "abc12345",
-    "name": "file.pdf",
-    "size": 1048576,
-    "status": "completed",
-    "downloadUrl": "https://domku.xyz/files/abc12345/download"
-  }
+  "status": "healthy",
+  "details": { "prisma": "connected", "supabase": "connected" }
 }`}
-            </pre>
           </div>
         </div>
       </div>
