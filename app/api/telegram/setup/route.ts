@@ -7,10 +7,9 @@ export async function GET(req: NextRequest) {
   const domain = req.headers.get('host')
   const protocol = req.headers.get('x-forwarded-proto') || 'https'
   
-  if (!token) return NextResponse.json({ error: 'TELEGRAM_BOT_TOKEN belum diisi di Env Vercel' })
+  if (!token) return NextResponse.json({ error: 'Missing TELEGRAM_BOT_TOKEN' })
 
   const webhookUrl = `${protocol}://${domain}/api/telegram`
-  
   const telegramApi = `https://api.telegram.org/bot${token}/setWebhook?url=${webhookUrl}`
 
   try {
@@ -18,8 +17,8 @@ export async function GET(req: NextRequest) {
     const data = await res.json()
     return NextResponse.json({ 
       success: data.ok, 
-      configured_webhook: webhookUrl, 
-      telegram_response: data 
+      url: webhookUrl, 
+      response: data 
     })
   } catch (error: any) {
     return NextResponse.json({ error: error.message })
