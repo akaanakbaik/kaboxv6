@@ -4,7 +4,7 @@ export default function Footer() {
       <div className="max-w-6xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-gray-500">
         <div className="flex items-center gap-2">
           <span>created by</span>
-          <a href="https://akadev.me" target="_blank" rel="noopener noreferrer" className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-white hover:scale-105 transition-transform">
+          <a href="https://akaa.dev" target="_blank" rel="noopener noreferrer" className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-white hover:scale-105 transition-transform">
             aka
           </a>
           <span className="hidden md:inline text-gray-700">|</span>
